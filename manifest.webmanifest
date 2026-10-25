@@ -1,0 +1,9 @@
+{
+  "name": "Wordly — англійські слова",
+  "short_name": "Wordly",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8f4ec",
+  "theme_color": "#1f6f5c",
+  "lang": "uk"
+}
