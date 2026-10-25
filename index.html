@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <link rel="stylesheet" href="styles.css?v=4" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>
@@ -100,18 +100,13 @@
             <span class="quiz-type" id="quizType">Noun</span>
             <span class="score-pill">Правильно: <span id="quizScore">0</span></span>
           </div>
-          <p class="quiz-prompt">Вставте правильне слово</p>
+          <p class="quiz-prompt">Оберіть правильне слово</p>
           <p class="quiz-sentence" id="quizSentence">Programmed cell death is called _____.</p>
           <p class="quiz-translation">Підказка: <strong id="quizTranslation">апоптоз</strong></p>
 
-          <form class="quiz-form" id="quizForm">
-            <label class="sr-only" for="quizAnswer">Ваша відповідь англійською</label>
-            <input id="quizAnswer" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Введіть слово англійською" />
-            <button class="primary-button quiz-submit" id="quizSubmit" type="submit">Перевірити</button>
-          </form>
-
+          <div class="quiz-choices" id="quizChoices" role="group" aria-label="Варіанти відповіді"></div>
           <div class="quiz-feedback" id="quizFeedback" role="status" aria-live="polite" hidden></div>
-          <button class="hint-button" id="hintButton" type="button">Показати першу літеру</button>
+          <button class="primary-button quiz-next" id="quizNext" type="button" hidden>Наступне завдання</button>
         </div>
       </section>
     </main>
@@ -131,6 +126,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>

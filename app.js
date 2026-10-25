@@ -114,11 +114,9 @@ const elements = {
   quizScore: document.querySelector("#quizScore"),
   quizSentence: document.querySelector("#quizSentence"),
   quizTranslation: document.querySelector("#quizTranslation"),
-  quizForm: document.querySelector("#quizForm"),
-  quizAnswer: document.querySelector("#quizAnswer"),
-  quizSubmit: document.querySelector("#quizSubmit"),
+  quizChoices: document.querySelector("#quizChoices"),
+  quizNext: document.querySelector("#quizNext"),
   quizFeedback: document.querySelector("#quizFeedback"),
-  hintButton: document.querySelector("#hintButton"),
 };
 
 let words = [...originalWords];
@@ -161,18 +159,53 @@ function renderQuiz() {
   elements.quizSentence.textContent = quizPrompts[word.english];
   elements.quizTranslation.textContent = word.ukrainian;
   elements.quizScore.textContent = quizScore;
-  elements.quizAnswer.value = "";
-  elements.quizAnswer.disabled = false;
-  elements.quizAnswer.classList.remove("is-correct", "is-wrong");
-  elements.quizSubmit.textContent = "Перевірити";
   elements.quizFeedback.hidden = true;
   elements.quizFeedback.className = "quiz-feedback";
-  elements.hintButton.hidden = false;
+  elements.quizNext.hidden = true;
+  renderQuizChoices(word);
   quizAnswered = false;
   elements.current.textContent = currentIndex + 1;
   elements.total.textContent = words.length;
   elements.progress.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
   localStorage.setItem("wordly-index", String(currentIndex));
+}
+
+function shuffled(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function getQuizChoices(correctWord) {
+  const sameType = shuffled(words.filter((word) => word !== correctWord && word.type === correctWord.type));
+  const otherTypes = shuffled(words.filter((word) => word !== correctWord && word.type !== correctWord.type));
+  const distractors = sameType.slice(0, 4);
+  if (distractors.length < 4) distractors.push(...otherTypes.slice(0, 4 - distractors.length));
+  return shuffled([correctWord, ...distractors]);
+}
+
+function renderQuizChoices(correctWord) {
+  elements.quizChoices.replaceChildren();
+  getQuizChoices(correctWord).forEach((word, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice-button";
+    button.dataset.word = word.english;
+
+    const key = document.createElement("span");
+    key.className = "choice-key";
+    key.setAttribute("aria-hidden", "true");
+    key.textContent = index + 1;
+
+    const label = document.createElement("span");
+    label.textContent = expectedAnswer(word);
+    button.append(key, label);
+    button.addEventListener("click", () => chooseQuizAnswer(button, word));
+    elements.quizChoices.append(button);
+  });
 }
 
 function renderActiveMode() {
@@ -191,7 +224,6 @@ function setMode(mode) {
   });
   localStorage.setItem("wordly-mode", mode);
   renderActiveMode();
-  if (mode === "quiz") elements.quizAnswer.focus();
 }
 
 function flipCard() {
@@ -214,62 +246,38 @@ function nextCard() {
 function nextQuiz() {
   currentIndex = (currentIndex + 1) % words.length;
   renderQuiz();
-  elements.quizAnswer.focus();
   if (currentIndex === 0) showToast(`Тест завершено: ${quizScore} з ${words.length}`);
-}
-
-function normalizeAnswer(value) {
-  return value.trim().toLocaleLowerCase("en-US").replace(/\s+/g, " ");
 }
 
 function expectedAnswer(word) {
   return word.english.replace(/^To\s+/i, "");
 }
 
-function checkQuizAnswer(event) {
-  event.preventDefault();
-  if (quizAnswered) {
-    nextQuiz();
-    return;
-  }
-
+function chooseQuizAnswer(button, selectedWord) {
+  if (quizAnswered || button.disabled) return;
   const word = words[currentIndex];
-  const expected = expectedAnswer(word);
-  const answer = normalizeAnswer(elements.quizAnswer.value);
-  if (!answer) {
-    elements.quizAnswer.focus();
-    return;
-  }
-
-  const isCorrect = answer === normalizeAnswer(expected);
-  elements.quizAnswer.classList.remove("is-correct", "is-wrong");
+  const isCorrect = selectedWord.english === word.english;
   elements.quizFeedback.hidden = false;
 
   if (isCorrect) {
     quizScore += 1;
     quizAnswered = true;
     elements.quizScore.textContent = quizScore;
-    elements.quizAnswer.classList.add("is-correct");
-    elements.quizAnswer.disabled = true;
+    button.classList.add("is-correct");
+    elements.quizChoices.querySelectorAll("button").forEach((choice) => {
+      choice.disabled = true;
+      if (choice.dataset.word === word.english) choice.classList.add("is-correct");
+    });
     elements.quizFeedback.className = "quiz-feedback is-correct";
     elements.quizFeedback.textContent = `Правильно! ${word.english} — ${word.ukrainian}.`;
-    elements.quizSubmit.textContent = "Наступне завдання";
-    elements.hintButton.hidden = true;
+    elements.quizNext.hidden = false;
+    elements.quizNext.focus();
   } else {
-    elements.quizAnswer.classList.add("is-wrong");
+    button.classList.add("is-wrong");
+    button.disabled = true;
     elements.quizFeedback.className = "quiz-feedback is-wrong";
-    elements.quizFeedback.textContent = "Поки що ні. Перевірте написання та спробуйте ще раз.";
-    elements.quizAnswer.select();
+    elements.quizFeedback.textContent = "Неправильно. Спробуйте інший варіант.";
   }
-}
-
-function showQuizHint() {
-  const answer = expectedAnswer(words[currentIndex]);
-  elements.quizFeedback.hidden = false;
-  elements.quizFeedback.className = "quiz-feedback";
-  const letterCount = answer.replace(/\s/g, "").length;
-  elements.quizFeedback.textContent = `Починається з «${answer[0]}» · ${letterCount} літер`;
-  elements.quizAnswer.focus();
 }
 
 function speakWord() {
@@ -343,8 +351,7 @@ elements.renameForm.addEventListener("submit", saveDeckName);
 elements.closeDialog.addEventListener("click", closeRenameDialog);
 elements.cancelRename.addEventListener("click", closeRenameDialog);
 elements.modeButtons.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
-elements.quizForm.addEventListener("submit", checkQuizAnswer);
-elements.hintButton.addEventListener("click", showQuizHint);
+elements.quizNext.addEventListener("click", nextQuiz);
 elements.renameDialog.addEventListener("click", (event) => {
   if (event.target === elements.renameDialog) closeRenameDialog();
 });
@@ -355,6 +362,10 @@ document.addEventListener("keydown", (event) => {
     flipCard();
   }
   if (currentMode === "cards" && event.code === "ArrowRight") nextCard();
+  if (currentMode === "quiz" && /^[1-5]$/.test(event.key)) {
+    const choice = elements.quizChoices.querySelectorAll("button")[Number(event.key) - 1];
+    if (choice && !choice.disabled) choice.click();
+  }
 });
 
 setMode(currentMode);
