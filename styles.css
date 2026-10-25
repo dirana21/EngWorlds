@@ -55,7 +55,37 @@ button { font: inherit; }
   justify-content: space-between;
 }
 
-.topbar { margin-bottom: 64px; }
+.topbar { margin-bottom: 26px; }
+
+.mode-switch {
+  display: grid;
+  width: fit-content;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  margin-bottom: 42px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 253, 248, .62);
+}
+
+.mode-button {
+  min-width: 104px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mode-button.is-active {
+  color: #fff;
+  background: var(--green);
+  box-shadow: 0 5px 14px rgba(31, 111, 92, .2);
+}
 
 .brand {
   display: inline-flex;
@@ -315,6 +345,55 @@ kbd { padding: 2px 6px; border: 1px solid var(--line); border-radius: 5px; backg
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
+.quiz-panel[hidden] { display: none; }
+
+.quiz-card {
+  min-height: 430px;
+  padding: 36px 40px;
+  border: 1px solid rgba(24, 51, 46, .06);
+  border-radius: 30px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.quiz-meta { display: flex; align-items: center; justify-content: space-between; }
+.quiz-type { color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.score-pill { padding: 7px 11px; border-radius: 999px; color: var(--green-dark); background: var(--green-soft); font-size: 12px; font-weight: 700; }
+.quiz-prompt { margin: 54px 0 13px; color: var(--muted); font-size: 13px; font-weight: 600; }
+.quiz-sentence { margin: 0; font: 700 clamp(25px, 4.2vw, 35px)/1.35 "Manrope", sans-serif; letter-spacing: -.035em; }
+.quiz-translation { margin: 18px 0 32px; color: var(--muted); font-size: 14px; }
+.quiz-translation strong { color: var(--ink); }
+
+.quiz-form { display: flex; gap: 10px; }
+.quiz-form input {
+  min-width: 0;
+  height: 56px;
+  flex: 1;
+  padding: 0 17px;
+  border: 1px solid rgba(24, 51, 46, .18);
+  border-radius: 16px;
+  color: var(--ink);
+  background: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+  transition: border 160ms ease, box-shadow 160ms ease;
+}
+.quiz-form input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(31, 111, 92, .1); }
+.quiz-form input.is-correct { border-color: #2c8b63; background: #f4fbf7; }
+.quiz-form input.is-wrong { border-color: #c8584c; background: #fff8f6; animation: shake 240ms ease; }
+.quiz-submit { min-width: 142px; padding: 0 20px; }
+.quiz-feedback { margin-top: 16px; padding: 12px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+.quiz-feedback.is-correct { color: #176241; background: #e6f4eb; }
+.quiz-feedback.is-wrong { color: #9f3f35; background: #fbe9e6; }
+.hint-button { margin-top: 15px; padding: 0; border: 0; color: var(--green); background: transparent; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  35% { transform: translateX(-5px); }
+  70% { transform: translateX(5px); }
+}
+
 .rename-dialog {
   width: min(calc(100% - 32px), 430px);
   padding: 0;
@@ -348,10 +427,16 @@ kbd { padding: 2px 6px; border: 1px solid var(--line); border-radius: 5px; backg
 
 @media (max-width: 560px) {
   .app-shell { width: min(100% - 28px, 680px); padding-top: 18px; }
-  .topbar { margin-bottom: 42px; }
+  .topbar { margin-bottom: 20px; }
+  .mode-switch { width: 100%; margin-bottom: 32px; }
+  .mode-button { min-width: 0; }
   .flashcard { height: min(54vh, 420px); min-height: 330px; border-radius: 25px; }
   .card-face { padding: 28px; }
   .controls { margin-top: 16px; }
+  .quiz-card { min-height: 390px; padding: 27px 24px; border-radius: 25px; }
+  .quiz-prompt { margin-top: 42px; }
+  .quiz-form { flex-direction: column; }
+  .quiz-submit { width: 100%; }
   .keyboard-hint { display: none; }
 }
 

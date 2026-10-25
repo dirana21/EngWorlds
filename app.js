@@ -41,6 +41,49 @@ const originalWords = [
   { english: "Predominantly", ukrainian: "Переважно", pronunciation: "[прідо́мінентлі]", type: "Adverb" },
 ];
 
+const quizPrompts = {
+  Apoptosis: "Programmed cell death is called _____.",
+  Carrier: "A person who carries a genetic trait without symptoms is a _____.",
+  Chain: "DNA consists of a long _____ of nucleotides.",
+  Dysmenorrhea: "Painful menstruation is known as _____.",
+  Incompatibility: "Blood group _____ can cause complications during pregnancy.",
+  Infertility: "The inability to conceive may be diagnosed as _____.",
+  Maturation: "The final stage of cell _____ prepares it for its function.",
+  Offspring: "Genes are passed from parents to their _____.",
+  Ovum: "A mature female reproductive cell is called an _____.",
+  Pattern: "The inheritance _____ was visible across three generations.",
+  Scrape: "The doctor collected a skin _____ for examination.",
+  Sequence: "A gene is defined by its DNA _____.",
+  "To define": "Scientists _____ apoptosis as programmed cell death.",
+  "To determine": "Genetic testing can _____ the cause of the disorder.",
+  "To deliver": "The bloodstream can _____ oxygen to every tissue.",
+  "To introduce": "The researcher will _____ the new method to the team.",
+  "To label": "Technicians _____ each sample before analysis.",
+  "To observe": "Doctors _____ the cells under a microscope.",
+  "To occur": "Mutations may _____ during DNA replication.",
+  "To release": "Cells _____ energy during metabolism.",
+  "To resist": "Some bacteria can _____ antibiotics.",
+  "To restore": "Treatment may _____ normal hormone levels.",
+  "To result in": "Vitamin deficiency can _____ developmental problems.",
+  "To spread": "Infections can _____ rapidly through a population.",
+  Developmental: "Childhood is a period of rapid _____ change.",
+  Drastic: "The treatment caused a _____ reduction in symptoms.",
+  Environmental: "Air pollution is an _____ risk factor.",
+  Germinal: "These cells belong to the _____ layer.",
+  Haploid: "A human sperm cell is _____.",
+  Multiple: "The patient showed _____ symptoms.",
+  Necessary: "Water is _____ for all living organisms.",
+  Provisional: "The researchers made a _____ diagnosis before all tests were complete.",
+  Similar: "The twins have _____ genetic profiles.",
+  Subnormal: "The result was slightly _____ but not critically low.",
+  Yellowish: "The sample had a _____ color.",
+  Approximately: "The human body contains _____ 37 trillion cells.",
+  Congenitally: "The condition was present _____ rather than acquired later.",
+  Immediately: "Severe allergic reactions must be treated _____.",
+  Respectively: "The samples were labeled A and B, _____.",
+  Predominantly: "The tissue is _____ composed of muscle cells.",
+};
+
 const elements = {
   card: document.querySelector("#flashcard"),
   english: document.querySelector("#englishWord"),
@@ -64,6 +107,18 @@ const elements = {
   deckNameInput: document.querySelector("#deckNameInput"),
   closeDialog: document.querySelector("#closeDialogButton"),
   cancelRename: document.querySelector("#cancelRenameButton"),
+  modeButtons: document.querySelectorAll(".mode-button"),
+  cardsPanel: document.querySelector("#cardsPanel"),
+  quizPanel: document.querySelector("#quizPanel"),
+  quizType: document.querySelector("#quizType"),
+  quizScore: document.querySelector("#quizScore"),
+  quizSentence: document.querySelector("#quizSentence"),
+  quizTranslation: document.querySelector("#quizTranslation"),
+  quizForm: document.querySelector("#quizForm"),
+  quizAnswer: document.querySelector("#quizAnswer"),
+  quizSubmit: document.querySelector("#quizSubmit"),
+  quizFeedback: document.querySelector("#quizFeedback"),
+  hintButton: document.querySelector("#hintButton"),
 };
 
 let words = [...originalWords];
@@ -75,6 +130,9 @@ if (localStorage.getItem("wordly-deck-version") !== deckVersion) {
 }
 if (!Number.isFinite(currentIndex) || currentIndex >= words.length) currentIndex = 0;
 let deckName = localStorage.getItem("wordly-deck-name") || "Біологія 1";
+let currentMode = localStorage.getItem("wordly-mode") === "quiz" ? "quiz" : "cards";
+let quizScore = 0;
+let quizAnswered = false;
 
 function renderCard() {
   const word = words[currentIndex];
@@ -94,6 +152,48 @@ function renderCard() {
   localStorage.setItem("wordly-index", String(currentIndex));
 }
 
+function renderQuiz() {
+  const word = words[currentIndex];
+  elements.deckTitle.textContent = deckName;
+  elements.deckSize.textContent = words.length;
+  elements.renameDeck.setAttribute("aria-label", `Перейменувати каталог ${deckName}`);
+  elements.quizType.textContent = word.type;
+  elements.quizSentence.textContent = quizPrompts[word.english];
+  elements.quizTranslation.textContent = word.ukrainian;
+  elements.quizScore.textContent = quizScore;
+  elements.quizAnswer.value = "";
+  elements.quizAnswer.disabled = false;
+  elements.quizAnswer.classList.remove("is-correct", "is-wrong");
+  elements.quizSubmit.textContent = "Перевірити";
+  elements.quizFeedback.hidden = true;
+  elements.quizFeedback.className = "quiz-feedback";
+  elements.hintButton.hidden = false;
+  quizAnswered = false;
+  elements.current.textContent = currentIndex + 1;
+  elements.total.textContent = words.length;
+  elements.progress.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
+  localStorage.setItem("wordly-index", String(currentIndex));
+}
+
+function renderActiveMode() {
+  if (currentMode === "quiz") renderQuiz();
+  else renderCard();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  elements.cardsPanel.hidden = mode !== "cards";
+  elements.quizPanel.hidden = mode !== "quiz";
+  elements.modeButtons.forEach((button) => {
+    const isActive = button.dataset.mode === mode;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  localStorage.setItem("wordly-mode", mode);
+  renderActiveMode();
+  if (mode === "quiz") elements.quizAnswer.focus();
+}
+
 function flipCard() {
   elements.card.classList.toggle("is-flipped");
   const isFlipped = elements.card.classList.contains("is-flipped");
@@ -109,6 +209,67 @@ function nextCard() {
   currentIndex = (currentIndex + 1) % words.length;
   renderCard();
   if (currentIndex === 0) showToast("Каталог завершено — починаємо знову");
+}
+
+function nextQuiz() {
+  currentIndex = (currentIndex + 1) % words.length;
+  renderQuiz();
+  elements.quizAnswer.focus();
+  if (currentIndex === 0) showToast(`Тест завершено: ${quizScore} з ${words.length}`);
+}
+
+function normalizeAnswer(value) {
+  return value.trim().toLocaleLowerCase("en-US").replace(/\s+/g, " ");
+}
+
+function expectedAnswer(word) {
+  return word.english.replace(/^To\s+/i, "");
+}
+
+function checkQuizAnswer(event) {
+  event.preventDefault();
+  if (quizAnswered) {
+    nextQuiz();
+    return;
+  }
+
+  const word = words[currentIndex];
+  const expected = expectedAnswer(word);
+  const answer = normalizeAnswer(elements.quizAnswer.value);
+  if (!answer) {
+    elements.quizAnswer.focus();
+    return;
+  }
+
+  const isCorrect = answer === normalizeAnswer(expected);
+  elements.quizAnswer.classList.remove("is-correct", "is-wrong");
+  elements.quizFeedback.hidden = false;
+
+  if (isCorrect) {
+    quizScore += 1;
+    quizAnswered = true;
+    elements.quizScore.textContent = quizScore;
+    elements.quizAnswer.classList.add("is-correct");
+    elements.quizAnswer.disabled = true;
+    elements.quizFeedback.className = "quiz-feedback is-correct";
+    elements.quizFeedback.textContent = `Правильно! ${word.english} — ${word.ukrainian}.`;
+    elements.quizSubmit.textContent = "Наступне завдання";
+    elements.hintButton.hidden = true;
+  } else {
+    elements.quizAnswer.classList.add("is-wrong");
+    elements.quizFeedback.className = "quiz-feedback is-wrong";
+    elements.quizFeedback.textContent = "Поки що ні. Перевірте написання та спробуйте ще раз.";
+    elements.quizAnswer.select();
+  }
+}
+
+function showQuizHint() {
+  const answer = expectedAnswer(words[currentIndex]);
+  elements.quizFeedback.hidden = false;
+  elements.quizFeedback.className = "quiz-feedback";
+  const letterCount = answer.replace(/\s/g, "").length;
+  elements.quizFeedback.textContent = `Починається з «${answer[0]}» · ${letterCount} літер`;
+  elements.quizAnswer.focus();
 }
 
 function speakWord() {
@@ -129,14 +290,16 @@ function shuffleWords() {
     [words[i], words[j]] = [words[j], words[i]];
   }
   currentIndex = 0;
-  renderCard();
+  quizScore = 0;
+  renderActiveMode();
   showToast("Слова перемішано");
 }
 
 function resetDeck() {
   words = [...originalWords];
   currentIndex = 0;
-  renderCard();
+  quizScore = 0;
+  renderActiveMode();
   showToast("Починаємо спочатку");
 }
 
@@ -179,16 +342,19 @@ elements.renameDeck.addEventListener("click", openRenameDialog);
 elements.renameForm.addEventListener("submit", saveDeckName);
 elements.closeDialog.addEventListener("click", closeRenameDialog);
 elements.cancelRename.addEventListener("click", closeRenameDialog);
+elements.modeButtons.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
+elements.quizForm.addEventListener("submit", checkQuizAnswer);
+elements.hintButton.addEventListener("click", showQuizHint);
 elements.renameDialog.addEventListener("click", (event) => {
   if (event.target === elements.renameDialog) closeRenameDialog();
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.code === "Space") {
+  if (currentMode === "cards" && event.code === "Space") {
     event.preventDefault();
     flipCard();
   }
-  if (event.code === "ArrowRight") nextCard();
+  if (currentMode === "cards" && event.code === "ArrowRight") nextCard();
 });
 
-renderCard();
+setMode(currentMode);
