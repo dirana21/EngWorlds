@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>
@@ -53,7 +53,14 @@
           </button>
           <p class="deck-size"><span id="deckSize">40</span> слів</p>
         </div>
-        <div class="counter" aria-live="polite"><span id="currentNumber">1</span><span class="counter-muted"> / </span><span id="totalNumber">40</span></div>
+        <div class="study-aside">
+          <label class="sr-only" for="catalogSelect">Оберіть каталог</label>
+          <select class="catalog-select" id="catalogSelect" aria-label="Оберіть каталог">
+            <option value="biology1">Біологія 1</option>
+            <option value="biology2">Біологія 2</option>
+          </select>
+          <div class="counter" aria-live="polite"><span id="currentNumber">1</span><span class="counter-muted"> / </span><span id="totalNumber">40</span></div>
+        </div>
       </section>
 
       <div class="progress-track" aria-label="Прогрес колоди">
@@ -126,6 +133,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
   </body>
 </html>
